@@ -1,0 +1,31 @@
+{
+    "last_id": "3",
+    "entries": {
+        "2": {
+            "id": "2",
+            "title": "iPhone X",
+            "description": "SIM-Free, Model A19211 6.5-inch Super Retina HD display with OLED technology A12 Bionic chip with ...",
+            "price": "899",
+            "discountPercentage": "17.94",
+            "rating": "4.44",
+            "stock": "34",
+            "brand": "Apple",
+            "category": "smartphones",
+            "thumbnail": "https:\/\/i.dummyjson.com\/data\/products\/2\/thumbnail.jpg",
+            "order_count": 3
+        },
+        "3": {
+            "id": "3",
+            "title": "Samsung Universe 9",
+            "description": "Samsung's new variant which goes beyond Galaxy to the Universe",
+            "price": "1249",
+            "discountPercentage": "15.46",
+            "rating": "4.09",
+            "stock": "36",
+            "brand": "Samsung",
+            "category": "smartphones",
+            "thumbnail": "https:\/\/i.dummyjson.com\/data\/products\/3\/thumbnail.jpg",
+            "order_count": 1
+        }
+    }
+}

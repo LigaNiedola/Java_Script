@@ -2,28 +2,27 @@ const cartContainer = document.getElementById("cart-container");
 const totalCountElement = document.getElementById("total-count");
 const totalPriceElement = document.getElementById("total-price");
 
+let cartItems = {};
+let totalCount = 0;
+let totalPrice = 0;
+
 function renderCart() {
   cartContainer.innerHTML = "";
-  let totalPrice = 0;
-  let totalCount = 0;
 
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-
-  cartItems.forEach((item, index) => {
-    const itemElement = createItemElement(item, index);
+  for (const id in cartItems) {
+    const item = cartItems[id];
+    const itemElement = createItemElement(item, id);
     cartContainer.appendChild(itemElement);
-
-    totalCount += item.count;
-    totalPrice += item.price * item.count;
-  });
+  }
 
   totalCountElement.innerText = `Total Count: ${totalCount} Pcs`;
   totalPriceElement.innerText = `Total Price: ${totalPrice} USD`;
 }
 
-function createItemElement(item, index) {
+function createItemElement(item, id) {
   const itemElement = document.createElement("div");
   itemElement.classList.add("item");
+  itemElement.dataset.id = id;
 
   const itemImage = document.createElement("img");
   itemImage.src = item.thumbnail;
@@ -33,24 +32,24 @@ function createItemElement(item, index) {
 
   const increaseButton = createButton("+");
   increaseButton.addEventListener("click", () => {
-    changeItemCount(index, 1);
+    changeItemCount(id, 1);
   });
 
   const itemCount = document.createElement("span");
   itemCount.classList.add("count");
-  itemCount.innerText = item.count;
+  itemCount.innerText = item.order_count;
 
   const decreaseButton = createButton("-");
   decreaseButton.addEventListener("click", () => {
-    changeItemCount(index, -1);
+    changeItemCount(id, -1);
   });
 
   const itemPrice = document.createElement("span");
-  itemPrice.innerText = `${item.price * item.count} USD`;
+  itemPrice.innerText = `${item.price * item.order_count} USD`;
 
   const deleteButton = createButton("Delete");
   deleteButton.addEventListener("click", () => {
-    deleteItem(index);
+    changeItemCount(id, 0);
   });
 
   itemElement.appendChild(itemImage);
@@ -70,32 +69,57 @@ function createButton(text) {
   return button;
 }
 
-function changeItemCount(index, amount) {
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+function changeItemCount(id, amount) {
+  // amount == 0 - delete operation
+  if (cartItems[id]) {
+    if (amount !== 0) {
+      cartItems[id].order_count += amount;
 
-  if (cartItems[index]) {
-    cartItems[index].count += amount;
+      totalCount += amount;
+      totalPrice += amount * cartItems[id].price;
 
-    if (cartItems[index].count < 1) {
-      cartItems.splice(index, 1);
+      if (cartItems[id].order_count < 1) {
+        delete cartItems[id];
+        deleteFromAPI(id);
+      }
+    }
+    else {
+      totalCount -= cartItems[id].order_count;
+      totalPrice -= cartItems[id].order_count * cartItems[id].price;
+
+      delete cartItems[id];
+      deleteFromAPI(id);
     }
 
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
+    // TODO:  Update to API
+    /**
+     * 1. Fetch pieprasījums
+     * 2. Api un Crud loģīka
+     */
     renderCart();
   }
 }
 
-function deleteItem(index) {
-  const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
 
-  if (cartItems[index]) {
-    cartItems.splice(index, 1);
-
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-
-    renderCart();
-  }
+function deleteFromAPI (id) {
+  const data = new FormData();
+  data.append('id', id);
+  fetch("api.php?action_name=delete&from_javascript", {
+    method: 'post',
+    body: data
+  });
 }
 
-document.addEventListener("DOMContentLoaded", renderCart);
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("api.php?action_name=read&from_javascript")
+    .then(function (response) {return response.json()})
+    .then(function (result) {
+      cartItems = result.data.entries;
+      for (const id in cartItems) {
+        const entry = cartItems[id]
+        totalCount += entry.order_count;
+        totalPrice += entry.order_count *  entry.price;
+      }
+      renderCart();
+    });
+});
